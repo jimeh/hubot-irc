@@ -62,6 +62,9 @@ class IrcBot extends Adapter
       debug:    process.env.HUBOT_IRC_DEBUG?
       usessl:   process.env.HUBOT_IRC_USESSL?
 
+    if process.env.HUBOT_IRC_MSG_ON_CONNECT
+      options['init_msgs'] = process.env.HUBOT_IRC_MSG_ON_CONNECT.split(';')
+
     client_options =
       password: options.password,
       debug: options.debug,
@@ -77,6 +80,14 @@ class IrcBot extends Adapter
 
     next_id = 1
     user_id = {}
+
+    if options.init_msgs?
+      bot.addListener 'registered', (message) ->
+        for msg in options.init_msgs
+          if match = msg.match /^(.+?)\:\s?(.+)$/
+            bot.say(match[1], match[2])
+          else
+            console.error('ERROR: "%s"', command)
 
     if options.nickpass?
       bot.addListener 'notice', (from, to, text) ->
